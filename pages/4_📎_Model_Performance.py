@@ -175,19 +175,22 @@ with st.expander("📄 Classification Report (detailed)", expanded=True):
             header=dict(
                 values=header_vals,
                 fill_color="#1f2937",
-                font=dict(color="white", size=12),
+                font=dict(color="white", size=16),
                 align="left"
             ),
             cells=dict(
                 values=cell_vals,
                 fill_color=[["#0b1220" if i % 2 == 0 else "#111827" for i in range(len(rep_display))]],
-                font=dict(color="white"),
+                font=dict(color="white", size=14),
                 align="left",
                 height=28
             )
         )]
     )
-    table.update_layout(margin=dict(l=0, r=0, t=0, b=0))
+    table.update_layout(
+      margin=dict(l=0, r=0, t=0, b=0),  # keep it minimal
+      height=len(rep_display) * 30 + 60  # adjusts figure height to rows
+    )
     st.plotly_chart(table, use_container_width=True)
 
 # ---------- Notes ----------
