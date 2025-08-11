@@ -1,24 +1,30 @@
 import streamlit as st
-from utils import load_wine
 import pandas as pd
+from pathlib import Path
 
-st.header("📊 Data Explorer")
+st.title("📊 Data Explorer")
 
-df = load_wine()
+DATA_PATH = Path("data/winequality-red.csv")
+df = pd.read_csv(DATA_PATH)
 
-c1, c2, c3 = st.columns(3)
-c1.metric("Rows", len(df))
-c2.metric("Columns", df.shape[1])
-c3.write("dtypes"); c3.write(df.dtypes)
+st.write("### Overview")
+st.dataframe(df.describe().T)
 
-st.subheader("Sample")
-st.dataframe(df.head(), use_container_width=True)
+# Filters
+flt_cols = ["alcohol", "volatile acidity", "citric acid", "sulphates", "pH"]
+sliders = {}
+cols_ui = st.columns(len(flt_cols))
+for i, col in enumerate(flt_cols):
+    min_val, max_val = float(df[col].min()), float(df[col].max())
+    sliders[col] = cols_ui[i].slider(col, min_val, max_val, (min_val, max_val))
 
-st.subheader("Interactive Filter")
-cols = st.multiselect("Columns", df.columns.tolist(), default=list(df.columns)[:8])
-query = st.text_input("Row filter (pandas query)", value="")
-try:
-    filtered = df.query(query) if query else df
-    st.dataframe(filtered[cols] if cols else filtered, use_container_width=True)
-except Exception as e:
-    st.warning(f"Filter error: {e}")
+q_choices = sorted(df["quality"].unique().tolist())
+q_sel = st.multiselect("Quality scores", q_choices, default=q_choices)
+
+fdf = df.copy()
+for col, (lo, hi) in sliders.items():
+    fdf = fdf[fdf[col].between(lo, hi)]
+fdf = fdf[fdf["quality"].isin(q_sel)]
+
+st.success(f"Filtered rows: {len(fdf)}")
+st.dataframe(fdf, use_container_width=True)

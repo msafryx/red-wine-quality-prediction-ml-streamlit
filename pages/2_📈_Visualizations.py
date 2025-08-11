@@ -1,27 +1,31 @@
 import streamlit as st
-import plotly.express as px
 import pandas as pd
-from utils import load_wine
+import plotly.express as px
+import seaborn as sns
+import matplotlib.pyplot as plt
+from pathlib import Path
 
-st.header("📈 Visualizations")
-df = load_wine()
+st.title("📈 Visualizations")
 
-num_cols = df.select_dtypes(include="number").columns.tolist()
+DATA_PATH = Path("data/winequality-red.csv")
+df = pd.read_csv(DATA_PATH)
+df["target_good"] = (df["quality"] >= 7).astype(int)
 
-st.subheader("Quality Distribution (Histogram)")
-fig = px.histogram(df, x="quality", nbins=11, color="wine_type", barmode="overlay")
-st.plotly_chart(fig, use_container_width=True)
+# Quality distribution
+st.subheader("Quality distribution")
+st.plotly_chart(px.histogram(df, x="quality", nbins=10))
 
-st.subheader("Alcohol vs Quality (Scatter)")
-fig2 = px.scatter(df, x="alcohol", y="quality", color="wine_type", trendline="ols")
-st.plotly_chart(fig2, use_container_width=True)
+# Alcohol vs Quality
+st.subheader("Alcohol vs Quality")
+st.plotly_chart(px.scatter(df, x="alcohol", y="quality", color="target_good"))
 
-st.subheader("Feature vs Quality (Box/Violin)")
-feat = st.selectbox("Choose feature", [c for c in num_cols if c != "quality"])
-fig3 = px.violin(df, x="wine_type", y=feat, color="wine_type", box=True, points="all")
-st.plotly_chart(fig3, use_container_width=True)
+# Correlation heatmap
+st.subheader("Correlation heatmap")
+corr = df.corr(numeric_only=True)
+fig, ax = plt.subplots(figsize=(8,6))
+sns.heatmap(corr, cmap="coolwarm", annot=False, ax=ax)
+st.pyplot(fig)
 
-st.subheader("Correlation Heatmap (Top 10 by |corr| with quality)")
-corr = df[num_cols].corr(numeric_only=True)["quality"].abs().sort_values(ascending=False).head(10).index
-fig4 = px.imshow(df[corr].corr(), text_auto=True, aspect="auto", color_continuous_scale="RdBu", origin="lower")
-st.plotly_chart(fig4, use_container_width=True)
+# Boxplot
+feat_sel = st.selectbox("Feature for boxplot", [c for c in df.columns if c != "quality"])
+st.plotly_chart(px.box(df, x="quality", y=feat_sel, points="outliers"))
