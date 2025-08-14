@@ -113,18 +113,7 @@ with right:
         c3.button("🔮 Predict")
         c4.button("📎 Performance")
     st.write("")
-    st.markdown(
-        """
-<div class="card">
-  <span class="badge">scikit‑learn</span>
-  <span class="badge">Random Forest</span>
-  <span class="badge">StandardScaler</span>
-  <span class="badge">Plotly</span>
-  <span class="badge">Streamlit</span>
-</div>
-""",
-        unsafe_allow_html=True
-    )
+   
 
 # ---------- Metrics ----------
 m1, m2, m3 = st.columns(3)
@@ -143,8 +132,7 @@ st.markdown(
 )
 
 # ---------- Dataset preview ----------
+
 with st.expander("🔎 Preview dataset"):
     st.dataframe(df.head(20), use_container_width=True)
 
-# ---------- Footer ----------
-st.caption("Built for your ML deployment assignment — Streamlit • scikit‑learn • Plotly")
