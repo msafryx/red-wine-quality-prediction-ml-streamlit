@@ -1,4 +1,4 @@
-# 🍷 Red Wine Quality Prediction – Machine Learning App
+# Red Wine Quality Prediction – Machine Learning App
 
 ## Overview
 This project demonstrates a **complete Machine Learning pipeline** — from **data exploration and model training** to **deployment with Streamlit Cloud**.  
@@ -88,6 +88,25 @@ streamlit run app.py
 - **scikit-learn** – ML Training & Evaluation  
 - **Pandas / NumPy** – Data Processing  
 - **Matplotlib / Seaborn / Plotly** – Visualizations  
+
+---
+
+## App Screenshots
+
+### Home Page
+![Home Page](screenshots/home.png)
+
+### Data Explorer
+![Prediction](screenshots/data_explorer)
+
+### Visualizations
+![Performance](screenshots/visualization.png)
+
+### Prediction 
+![Prediction](screenshots/predict.png)
+
+### Model Performance
+![Performance](screenshots/performance.png)
 
 ---
 
