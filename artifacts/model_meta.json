@@ -1,0 +1,5 @@
+{
+  "selection_metric": "auc_mean",
+  "best_model_name": "RandomForest",
+  "created_from": "cross_val"
+}

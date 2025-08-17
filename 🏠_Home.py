@@ -1,138 +1,222 @@
+import json
 import streamlit as st
 import pandas as pd
 from pathlib import Path
 
-# ---------- Page setup ----------
-st.set_page_config(page_title="Wine Quality (Red) – ML App", page_icon="🍷", layout="wide")
+# -------------------- Page setup --------------------
+st.set_page_config(
+    page_title=" Red Wine Quality Prediction  – ML App",
+    page_icon="🍷",
+    layout="wide"
+)
 
 DATA_PATH = Path("data/winequality-red.csv")
 df = pd.read_csv(DATA_PATH)
 
-# ---------- (Optional) Lottie animation loader ----------
-def lottie(url: str):
+# -------------------- Lottie loader (local first, URL fallback) --------------------
+def load_lottie_local(path: Path):
+    """Return parsed Lottie JSON from a local file, or None if not available."""
+    try:
+        from streamlit_lottie import st_lottie  # ensure installed
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+def render_lottie(obj_or_url, *, height=260):
+    """Render a Lottie object (dict) OR download from URL if a string is given."""
     try:
         from streamlit_lottie import st_lottie
-        import requests
-        r = requests.get(url)
-        if r.status_code == 200:
-            st_lottie(r.json(), height=240, loop=True, quality="high")
-        else:
-            st.image("https://media.giphy.com/media/kGCuRgmbnO3a0/giphy.gif")  # tasteful fallback
+        if isinstance(obj_or_url, dict):
+            st_lottie(obj_or_url, height=height, loop=True, quality="high")
+        elif isinstance(obj_or_url, str):
+            import requests
+            r = requests.get(obj_or_url, timeout=6)
+            if r.ok:
+                st_lottie(r.json(), height=height, loop=True, quality="high")
     except Exception:
-        # streamlit-lottie not installed or offline; ignore
+        # If streamlit-lottie isn't installed or anything fails, we just skip silently
         pass
 
-# ---------- Custom CSS (subtle animations + styling) ----------
+# Path to your local Lottie JSON (keep the spaces if your file is named that way)
+LOTTIE_PATH = Path("assets/wine-animation.json")
+lottie_local = load_lottie_local(LOTTIE_PATH)
+# Optional backup URL in case the local file isn't present
+LOTTIE_FALLBACK_URL = "https://assets10.lottiefiles.com/packages/lf20_bqmgf5tx.json"
+
+# -------------------- Global CSS --------------------
 st.markdown("""
 <style>
-/* remove default top padding for a tighter hero */
-.block-container { padding-top: 1.5rem; }
+/* tighten page */
+.block-container { padding-top: 1.2rem; }
 
-/* hero gradient */
+/* center hero */
 .hero {
-  padding: 1.25rem 1.5rem;
-  border-radius: 1.25rem;
-  background: linear-gradient(135deg, rgba(99,102,241,.08), rgba(236,72,153,.08));
-  border: 1px solid rgba(200,200,200,.12);
+  position: relative;
+  padding: 2.0rem 2rem 1.5rem 2rem;
+  border-radius: 18px;
+  text-align: center;
+  background: radial-gradient(1100px 400px at 50% -20%, rgba(236,72,153,.10), rgba(79,70,229,.10) 45%, transparent 70%),
+              linear-gradient(135deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 10px 30px rgba(0,0,0,.15);
 }
 
-/* animated wine icon */
-.wine {
+/* title + subtitle */
+.hero h1 {
+  font-size: 2.4rem;
+  margin: 0 0 .3rem 0;
+  letter-spacing: .2px;
+}
+.hero p {
+  margin: .25rem 0 0 0;
+  opacity: .90;
+}
+
+/* big emoji animation */
+.bounce {
   display:inline-block;
-  animation: floaty 3s ease-in-out infinite;
+  animation: bounce 2.6s ease-in-out infinite;
 }
-@keyframes floaty {
-  0%   { transform: translateY(0px) rotate(0deg); }
-  50%  { transform: translateY(-4px) rotate(1deg); }
-  100% { transform: translateY(0px) rotate(0deg); }
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
 
-/* pill badges */
+/* metric cards */
+.kpi {
+  padding: 1rem 1.1rem;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+}
+
+/* nav buttons */
+.navgrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: .75rem;
+  margin-top: .5rem;
+}
+.navbtn {
+  display: inline-flex; align-items:center; justify-content:center;
+  gap:.5rem;
+  padding:.85rem 1rem;
+  border-radius: 12px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  text-decoration:none !important;
+  transition: transform .15s ease, background .15s ease, border-color .15s ease;
+}
+.navbtn:hover { transform: translateY(-2px); background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.18); }
+
+/* tech badges */
+.badges { margin-top:.5rem; }
 .badge {
   display:inline-block;
-  padding: .35rem .6rem;
-  margin: .15rem .35rem .15rem 0;
-  border-radius: 999px;
-  font-size: .82rem;
-  border: 1px solid rgba(200,200,200,.18);
+  padding:.35rem .6rem;
+  margin:.18rem .25rem 0 .25rem;
+  border-radius:999px;
+  font-size:.82rem;
+  border:1px solid rgba(255,255,255,.16);
   background: rgba(255,255,255,.04);
 }
 
-/* glass card */
-.card {
-  padding: 1rem 1.1rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(200,200,200,.12);
-  background: rgba(255,255,255,.03);
-}
-
-/* fade-in */
-.fade-in { animation: fade 400ms ease 1; }
-@keyframes fade { from {opacity: .0; transform: translateY(4px);} to {opacity:1;} }
+/* fade-in on load */
+.fade-in { animation: fade .45s ease 1; }
+@keyframes fade { from {opacity:0; transform: translateY(6px);} to {opacity:1; transform:none;} }
 </style>
 """, unsafe_allow_html=True)
 
-# ---------- HERO ----------
+# -------------------- HERO --------------------
 st.markdown(
-    f"""
+    """
 <div class="hero fade-in">
-  <h1 style="margin:0 0 .3rem 0; font-size: 2.2rem;">
-    <span class="wine">🍷</span> Wine Quality (Red) — Machine Learning App
-  </h1>
-  <p style="margin:.25rem 0 0 0; opacity:.9;">
-    Predict whether a red wine is <b>Good</b> (quality ≥ 7) or <b>Not Good</b> from its chemical properties.
-  </p>
+  <h1><span class="bounce">🍷</span> Red Wine Quality Prediction — Machine Learning App</h1>
+  <p>Predict whether a red wine is <b>Good</b> (quality ≥ 7) or <b>Not Good</b> from its chemical properties.</p>
 </div>
 """,
     unsafe_allow_html=True
 )
 
-st.write("")  # tiny spacer
+st.write("")  # small spacer
 
-# ---------- Top row: Animation + Quick CTAs ----------
-left, right = st.columns([1.1, 1.4])
+# -------------------- Animation + Quick links --------------------
+col_anim, col_nav = st.columns([1, 1.2], vertical_alignment="center")
 
-with left:
-    st.markdown("#### ")
-    # 👉 Replace the URL with any Lottie wine/grapes animation you like
-    lottie("https://assets1.lottiefiles.com/packages/lf20_ia8dck.json")  # optional; silently ignored if not available
+with col_anim:
+    st.subheader(" ")
+    # Prefer local Lottie; if missing, use fallback URL
+    render_lottie(lottie_local if lottie_local else LOTTIE_FALLBACK_URL, height=240)
 
-with right:
-    st.markdown("#### Quick start")
-    c1, c2, c3, c4 = st.columns(4)
-    # Modern page links (Streamlit 1.30+). If on older version, use st.page_link or st.write with markdown URLs.
+with col_nav:
+    st.subheader("Quick Start")
+    # Use page_link where available; if not, show inert buttons
     try:
-        st.page_link("pages/1_📊_Data_Explorer.py", label="📊 Data Explorer")
-        st.page_link("pages/2_📈_Visualizations.py", label="📈 Visualizations")
-        st.page_link("pages/3_🔮_Predict.py", label="🔮 Predict")
-        st.page_link("pages/4_📎_Model_Performance.py", label="📎 Model Performance")
+        st.markdown('<div class="navgrid">', unsafe_allow_html=True)
+        st.page_link("pages/1_📊_Data_Explorer.py", label="📊 Data Explorer", help="Browse & filter the dataset")
+        st.page_link("pages/2_📈_Visualizations.py", label="📈 Visualizations", help="See charts & correlations")
+        st.page_link("pages/3_🔮_Predict.py", label="🔮 Predict", help="Enter features and predict quality")
+        st.page_link("pages/4_📎_Model_Performance.py", label="📎 Model Performance", help="Metrics, ROC/PR curves")
+        st.markdown("</div>", unsafe_allow_html=True)
     except Exception:
-        # Fallback: show four small buttons that navigate by instructions
-        c1.button("📊 Data Explorer")
-        c2.button("📈 Visualizations")
-        c3.button("🔮 Predict")
-        c4.button("📎 Performance")
-    st.write("")
-   
+        st.markdown(
+            """
+            <div class="navgrid">
+              <div class="navbtn">📊 Data Explorer</div>
+              <div class="navbtn">📈 Visualizations</div>
+              <div class="navbtn">🔮 Predict</div>
+              <div class="navbtn">📎 Performance</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
-# ---------- Metrics ----------
-m1, m2, m3 = st.columns(3)
-m1.metric("Rows", f"{df.shape[0]}")
-m2.metric("Columns", f"{df.shape[1]}")
-m3.metric("Target", "Binary: quality ≥ 7")
+    st.markdown(
+        """
+        <div class="badges">
+          <span class="badge">scikit-learn</span>
+          <span class="badge">Random Forest</span>
+          <span class="badge">StandardScaler</span>
+          <span class="badge">Plotly</span>
+          <span class="badge">Streamlit</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-# ---------- How it works ----------
-st.markdown("### How it works")
+st.write("")  # spacer
+
+# -------------------- KPIs --------------------
+k1, k2, k3 = st.columns(3)
+with k1:
+    st.container(height=1, border=False)
+    st.metric("Rows", f"{df.shape[0]}")
+with k2:
+    st.metric("Columns", f"{df.shape[1]}")
+with k3:
+    st.metric("Target Definition", "Good if quality ≥ 7")
+
+st.write("")
+
+# -------------------- About / How it works --------------------
+st.subheader("What is This App?")
 st.markdown(
     """
-1. **Explore** the data and correlations to understand what drives quality (e.g., alcohol, sulphates, volatile acidity).  
-2. **Predict** with your own inputs — we score probability of being **Good**.  
-3. **Review** performance (Accuracy, F1, ROC‑AUC), confusion matrix, and ROC curve.  
-    """.strip()
+This web app uses a trained machine-learning model on the **Wine Quality (Red)** dataset to predict whether a wine is
+**Good (quality ≥ 7)** based on its chemical properties.
+
+**Use the sidebar or Quick Start**:
+- **Data Explorer** — browse and filter the dataset  
+- **Visualizations** — understand feature distributions & correlations  
+- **Predict** — try your own feature values and get a probability of being Good  
+- **Model Performance** — see accuracy, F1, ROC-AUC, confusion matrix, ROC & PR curves
+"""
 )
 
-# ---------- Dataset preview ----------
+# -------------------- Dataset preview (expanded by default) --------------------
+with st.expander("🔎 Preview dataset", expanded=True):
+    st.dataframe(df.head(25), use_container_width=True)
 
-with st.expander("🔎 Preview dataset"):
-    st.dataframe(df.head(20), use_container_width=True)
-
+# -------------------- Footer --------------------
+st.caption("Built with ❤️ By Muhammed Safry")
