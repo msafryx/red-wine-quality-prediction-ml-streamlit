@@ -1,5 +1,6 @@
 # Red Wine Quality Prediction – Machine Learning App
 
+
 ## Overview
 This project demonstrates a **complete Machine Learning pipeline** — from **data exploration and model training** to **deployment with Streamlit Cloud**.  
 Using the **Wine Quality Dataset**, the app predicts whether a wine is **Good (≥7)** or **Not Good (<7)** based on its physicochemical properties.
