@@ -1,4 +1,4 @@
-# 🍷 Wine Quality Prediction – Machine Learning App
+# 🍷 Red Wine Quality Prediction – Machine Learning App
 
 ## Overview
 This project demonstrates a **complete Machine Learning pipeline** — from **data exploration and model training** to **deployment with Streamlit Cloud**.  
